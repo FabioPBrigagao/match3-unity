@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Board: MonoBehaviour {
 
-    SceneManager manager;
+    GameManager manager;
 
     public GameObject gem;
     public Sprite[] gemsSprites;
@@ -15,6 +15,7 @@ public class Board: MonoBehaviour {
     private GameObject[,] gems;
     private List<Dictionary<string, int>> matchCoordinates;
     public bool combo = false;
+    private int comboCount = 1;
 
     private const int GRID_WIDTH = 5;
     private const int GRID_HEIGHT = 7;
@@ -22,7 +23,7 @@ public class Board: MonoBehaviour {
     private const float WAIT_TIME_MOVE = 0.5f;
 
     void Awake(){
-        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<SceneManager>();
+        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
         initialPos = gameObject.transform.position;
         gridObj = new int[GRID_WIDTH, GRID_HEIGHT];
         gems = new GameObject[GRID_WIDTH,GRID_HEIGHT];
@@ -149,18 +150,21 @@ public class Board: MonoBehaviour {
         foreach (Dictionary<string, int> unit in matchCoordinates){
             gems[unit["x"], unit["y"]].GetComponent<SpriteRenderer>().sprite = null;
         }
+        manager.AddScore(matchCoordinates.Count, comboCount);
         matchCoordinates.Clear();
         yield return new WaitForSeconds(WAIT_TIME_MOVE);
         MoveGemsDownwards();
         yield return new WaitForSeconds(WAIT_TIME_MOVE);
         combo = CheckMatches(true); //Check if there was more than one match in a single move
         if(combo){
+            comboCount += 1;
             Debug.Log("combo");
             StartCoroutine(TriggerMatch());
         }else{
             CheckIfThereArePossibleMoves();
             manager.SetIsSwitching(false);
             combo = false;
+            comboCount = 1;
         }
     }
 
@@ -338,4 +342,10 @@ public class Board: MonoBehaviour {
         }
         return ifPossibleMove;
     }
+
+
+    public void DeactivateBoard(){
+        gameObject.SetActive(false);
+    }
+
 }

@@ -5,14 +5,14 @@ using UnityEngine;
 public class Gem : MonoBehaviour{
 
     Board board;
-    SceneManager manager;
+    GameManager manager;
 
     public bool selected = false;
     private Dictionary<string, int> coordinate;
 
     void Awake(){
         board = GameObject.FindGameObjectWithTag("Board").GetComponent<Board>();
-        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<SceneManager>();
+        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
     }
 
     void OnMouseDown(){
