@@ -7,6 +7,7 @@ public class SceneManager : MonoBehaviour{
     Board board;
 
     private bool isSelected = false;
+    private bool isSwitching = false;
 
     public int selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2;
 
@@ -15,15 +16,24 @@ public class SceneManager : MonoBehaviour{
     }
 
     public void CheckIfPossibleMove(){
-        if ((selectedXCor_1 + 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Right
-           (selectedXCor_1 - 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Left
-           (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 + 1 == selectedYCor_2) || //Up
-           (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)){  //Down
+        if (PerpendicularMove() && !isSwitching){ 
             if(board.CheckIfSwitchIsPossible(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2,true)){
                 board.MakeSpriteSwitch(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2);
+                isSwitching = true;
                 ResetCoordinates();
                 isSelected = false;
             }
+        }
+    }
+
+    bool PerpendicularMove(){
+        if ((selectedXCor_1 + 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Right
+                   (selectedXCor_1 - 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Left
+                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 + 1 == selectedYCor_2) || //Up
+                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)){ //Down
+            return true;
+        }else{
+            return false;
         }
     }
 
@@ -33,6 +43,9 @@ public class SceneManager : MonoBehaviour{
 
     public void SetIsSelected(bool status){
         isSelected = status;
+    }
+    public void SetIsSwitching(bool status){
+        isSwitching = status;
     }
 
     public void SetSelectedCoordinates(bool firstSelection, int x, int y){

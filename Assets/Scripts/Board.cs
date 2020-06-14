@@ -4,22 +4,25 @@ using UnityEngine;
 
 public class Board: MonoBehaviour {
 
+    SceneManager manager;
+
     public GameObject gem;
     public Sprite[] gemsSprites;
 
     private int[,] gridObj;
     private Vector3 initialPos;
-    private bool foundMatch = true;
+    private bool reset = true;
     private GameObject[,] gems;
     private List<Dictionary<string, int>> matchCoordinates;
-    public bool multipleMatches = false;
-    private bool noMoreMatches;
+    public bool combo = false;
 
     private const int GRID_WIDTH = 5;
     private const int GRID_HEIGHT = 7;
     private const float TILE_SIZE = 8;
+    private const float WAIT_TIME_MOVE = 0.5f;
 
     void Awake(){
+        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<SceneManager>();
         initialPos = gameObject.transform.position;
         gridObj = new int[GRID_WIDTH, GRID_HEIGHT];
         gems = new GameObject[GRID_WIDTH,GRID_HEIGHT];
@@ -27,25 +30,29 @@ public class Board: MonoBehaviour {
     }
 
     void Start(){
-        Setup();
+        Setup(false);
     }
 
     // Create 2D randomize gem grid with no matches
-    void Setup(){
-        while(foundMatch){
+    void Setup(bool shuffle){
+        while(reset){
             for (int x = 0; x < gridObj.GetLength(0); x++){
                 for (int y = 0; y < gridObj.GetLength(1); y++){
                     gridObj[x, y] = Random.Range(0, gemsSprites.GetLength(0));
                 }
             }
-            foundMatch = Check(false);
+            if(!CheckMatches(false) && CheckIfThereArePossibleMoves()){
+                reset = false;
+            }
         }
         for (int x = 0; x < gridObj.GetLength(0); x++){
             for (int y = 0; y < gridObj.GetLength(1); y++){
-                GameObject tempGemObj = Instantiate(gem, new Vector2(initialPos.x + (x * TILE_SIZE), initialPos.y + (y * TILE_SIZE)), Quaternion.identity, gameObject.transform);
-                gems[x, y] = tempGemObj;
-                tempGemObj.GetComponent<SpriteRenderer>().sprite = gemsSprites[gridObj[x, y]];
-                Gem tempGem = tempGemObj.GetComponent<Gem>();
+                if(!shuffle){
+                    GameObject tempGemObj = Instantiate(gem, new Vector2(initialPos.x + (x * TILE_SIZE), initialPos.y + (y * TILE_SIZE)), Quaternion.identity, gameObject.transform);
+                    gems[x, y] = tempGemObj;
+                }
+                gems[x, y].GetComponent<SpriteRenderer>().sprite = gemsSprites[gridObj[x, y]];
+                Gem tempGem = gems[x, y].GetComponent<Gem>();
                 tempGem.SetCoordinates(new Dictionary<string, int>() { { "x", x }, { "y", y } });
             }
         }
@@ -55,7 +62,7 @@ public class Board: MonoBehaviour {
     * 
     * Return: true if found match; otherwise, false
     */
-    bool Check(bool isPlayerMove){
+    bool CheckMatches(bool isPlayerMove){
         bool ifMatch = false;
         //Horizontal Check
         for (int x = 0; x < gridObj.GetLength(0) - 2; x++){
@@ -91,7 +98,6 @@ public class Board: MonoBehaviour {
         gems[x_1, y_1].GetComponent<SpriteRenderer>().sprite = spriteTemp_2;
         gems[x_2, y_2].GetComponent<SpriteRenderer>().sprite = spriteTemp_1;
         gems[x_1, y_1].GetComponent<Gem>().ResetSelection();
-        noMoreMatches = true;
         StartCoroutine(TriggerMatch());
     }
 
@@ -100,7 +106,7 @@ public class Board: MonoBehaviour {
         int temp_2 = gridObj[x_2, y_2];
         gridObj[x_1, y_1] = temp_2;
         gridObj[x_2, y_2] = temp_1;
-        if (Check(isPlayerMove)){
+        if (CheckMatches(isPlayerMove)){
             if(isPlayerMove){
                 return true;
             }else{
@@ -144,18 +150,17 @@ public class Board: MonoBehaviour {
             gems[unit["x"], unit["y"]].GetComponent<SpriteRenderer>().sprite = null;
         }
         matchCoordinates.Clear();
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(WAIT_TIME_MOVE);
         MoveGemsDownwards();
-        multipleMatches = Check(true); //Check if there was more than one match in a single move
-        if(multipleMatches){
-            Debug.Log("secondMatch");
+        yield return new WaitForSeconds(WAIT_TIME_MOVE);
+        combo = CheckMatches(true); //Check if there was more than one match in a single move
+        if(combo){
+            Debug.Log("combo");
             StartCoroutine(TriggerMatch());
-            multipleMatches = false;
-        }
-        if(noMoreMatches){
-            noMoreMatches = false;
-            CheckIfThereArePossibleMovesERRRROORRRR();
-            //CheckIfThereArePossibleMoves();
+        }else{
+            CheckIfThereArePossibleMoves();
+            manager.SetIsSwitching(false);
+            combo = false;
         }
     }
 
@@ -184,7 +189,7 @@ public class Board: MonoBehaviour {
     }
 
 
-    bool CheckIfThereArePossibleMovesERRRROORRRR(){
+    bool CheckIfThereArePossibleMoves(){
         bool ifPossibleMove = false;
         for (int x = 0; x < GRID_WIDTH; x++){
             for (int y = 0; y < GRID_HEIGHT; y++){
@@ -223,6 +228,8 @@ public class Board: MonoBehaviour {
         }
         if (!ifPossibleMove){
             Debug.Log("No Possible Move");
+            reset = true;
+            Setup(true);
         }
         return ifPossibleMove;
     }
@@ -231,7 +238,7 @@ public class Board: MonoBehaviour {
 
 
 
-    bool CheckIfThereArePossibleMoves(){
+    bool CheckIfThereArePossibleMovesOLD(){
         bool ifPossibleMove = false;
         for (int x = 0; x < GRID_WIDTH; x++){
             for (int y = 0; y < GRID_HEIGHT; y++){
