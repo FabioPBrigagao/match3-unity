@@ -223,28 +223,28 @@ public class Board: MonoBehaviour {
                 try{
                     ifPossibleMove =  CheckIfSwitchIsPossible(x, y, x, y + 1, false); //UP
                     if(ifPossibleMove){
-                        Debug.Log("Hint - x: " + x + " y: " + y);
+                        Debug.Log("Hint  x: " + x + " y: " + y);
                         break;
                     }
                 }catch{ }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x, y - 1, false); //DOWN
                     if (ifPossibleMove){
-                        Debug.Log("Hint - x: " + x + " y: " + y);
+                        Debug.Log("Hint  x: " + x + " y: " + y);
                         break;
                     }
                 }catch { }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x + 1, y, false); //RIGHT
                     if (ifPossibleMove){
-                        Debug.Log("Hint - x: " + x + " y: " + y);
+                        Debug.Log("Hint  x: " + x + " y: " + y);
                         break;
                     }
                 }catch { }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x - 1, y, false); //LEFT
                     if (ifPossibleMove){
-                        Debug.Log("Hint - x: " + x + " y: " + y);
+                        Debug.Log("Hint  x: " + x + " y: " + y);
                         break;
                     }
                 }catch { }
