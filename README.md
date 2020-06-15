@@ -1,6 +1,6 @@
 # match3-test
 
-Unity project folder containing a finished match3 game.
+This repository is a Unity project folder that contains a finished match3 game.
 
 ![](https://github.com/FabioPBrigagao/match3-unity/blob/master/match3_Screenshot.PNG)
 
@@ -19,6 +19,8 @@ This is a Unity project folder, so the game will run under the Unity editor unle
 - Press the Unity editor play button to initiate the game.
 
 - Use your left mouse click to navigate through the game.
+
+Note: The game runs on a reference aspect ratio of 9:16
 
 ## Credits & License
 
