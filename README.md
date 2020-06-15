@@ -2,12 +2,13 @@
 
 Unity project folder containing a finished match3 game.
 
+![](https://github.com/FabioPBrigagao/match3-unity/blob/master/match3_Screenshot.PNG)
+
 ## Unity Version
 
 This project was developed using Unity 2018.4.23f1
 
 ## Getting Started
-
 
 
 
