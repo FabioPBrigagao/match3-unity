@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class UI : MonoBehaviour{
 
     GameManager manager;
+    public Slider slider;
 
     public Text[] roundText, scoreText, timerText, totalScoreText, finalRoundText;
 
@@ -14,22 +15,23 @@ public class UI : MonoBehaviour{
     }
 
     void Update(){
-        scoreText[0].text = manager.score + " / " + manager.scoreRoundGoal;
-        scoreText[1].text = manager.score + " / " + manager.scoreRoundGoal;
+        scoreText[0].text = manager.score + " /" + manager.scoreRoundGoal;
+        scoreText[1].text = manager.score + " /" + manager.scoreRoundGoal;
 
         roundText[0].text = "Round #" + manager.round;
         roundText[1].text = "Round #" + manager.round;
 
         timerText[0].text = Mathf.Round(manager.timer) + "";
-        timerText[1].text = Mathf.Round(manager.timer) + "";
-
+        slider.value = manager.timer;
 
     }
 
-
+    /* Coroutine coordinates pop-ups during gameplay
+                    * Apply fade 
+                    */
     public IEnumerator DisplayFade(GameObject obj, int scoreAdd, float time){
         if (scoreAdd > 0){
-            obj.GetComponent<Text>().text = "+ " + scoreAdd;
+            obj.GetComponent<Text>().text = "+" + scoreAdd + "pts.";
         }
         obj.SetActive(true);
         Color originalcolor = obj.GetComponent<Text>().color;

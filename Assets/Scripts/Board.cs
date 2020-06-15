@@ -5,17 +5,19 @@ using UnityEngine;
 public class Board: MonoBehaviour {
 
     GameManager manager;
+    AudioManager audioManager;
+    UI ui;
 
     public GameObject gem;
     public Sprite[] gemsSprites;
 
     private int[,] gridObj;
-    private Vector3 initialPos;
+    private int comboCount = 1;
     private bool reset = true;
+    private bool combo = false;
+    private Vector3 initialPos;
     private GameObject[,] gems;
     private List<Dictionary<string, int>> matchCoordinates;
-    public bool combo = false;
-    private int comboCount = 1;
 
     private const int GRID_WIDTH = 5;
     private const int GRID_HEIGHT = 7;
@@ -23,18 +25,24 @@ public class Board: MonoBehaviour {
     private const float WAIT_TIME_MOVE = 0.5f;
 
     void Awake(){
+        audioManager = GameObject.FindGameObjectWithTag("Audio Manager").GetComponent<AudioManager>();
         manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
-        initialPos = gameObject.transform.position;
+        ui = GameObject.FindGameObjectWithTag("UI").GetComponent<UI>();
+
         gridObj = new int[GRID_WIDTH, GRID_HEIGHT];
         gems = new GameObject[GRID_WIDTH,GRID_HEIGHT];
         matchCoordinates = new List<Dictionary<string, int>>();
+
+        initialPos = gameObject.transform.position;
     }
 
     void Start(){
         Setup(false);
     }
 
-    // Create 2D randomize gem grid with no matches
+    /* Creates a 2D randomize grid with possible moves and no matches
+        *  It is called in the beginning of the game and when there are no possible move
+        */
     void Setup(bool shuffle){
         while(reset){
             for (int x = 0; x < gridObj.GetLength(0); x++){
@@ -49,7 +57,7 @@ public class Board: MonoBehaviour {
         for (int x = 0; x < gridObj.GetLength(0); x++){
             for (int y = 0; y < gridObj.GetLength(1); y++){
                 if(!shuffle){
-                    GameObject tempGemObj = Instantiate(gem, new Vector2(initialPos.x + (x * TILE_SIZE), initialPos.y + (y * TILE_SIZE)), Quaternion.identity, gameObject.transform);
+                    GameObject tempGemObj = Gem.Start(gem, initialPos, x, y, TILE_SIZE, gameObject.transform);
                     gems[x, y] = tempGemObj;
                 }
                 gems[x, y].GetComponent<SpriteRenderer>().sprite = gemsSprites[gridObj[x, y]];
@@ -60,9 +68,8 @@ public class Board: MonoBehaviour {
     }
 
     /* Check for any horizontal or vertical match
-    * 
-    * Return: true if found match; otherwise, false
-    */
+        *  If it is a player move, it saves the match coordinates so that a future trigger can be applied     
+        */
     bool CheckMatches(bool isPlayerMove){
         bool ifMatch = false;
         //Horizontal Check
@@ -92,7 +99,8 @@ public class Board: MonoBehaviour {
         return ifMatch;
     }
 
-
+    /* After the move has been checked possible, this function swaps the grid index and sprites
+        */
     public void MakeSpriteSwitch(int x_1, int y_1, int x_2, int y_2){
         Sprite spriteTemp_1 = gems[x_1, y_1].GetComponent<SpriteRenderer>().sprite;
         Sprite spriteTemp_2 = gems[x_2, y_2].GetComponent<SpriteRenderer>().sprite;
@@ -102,6 +110,11 @@ public class Board: MonoBehaviour {
         StartCoroutine(TriggerMatch());
     }
 
+
+
+    /* Check if the move generates a match
+         * If it is a player move, it keeps the grid index change. 
+         */
     public bool CheckIfSwitchIsPossible(int x_1, int y_1, int x_2, int y_2, bool isPlayerMove){
         int temp_1 = gridObj[x_1, y_1];
         int temp_2 = gridObj[x_2, y_2];
@@ -122,7 +135,8 @@ public class Board: MonoBehaviour {
         return false;
     }
 
-
+    /* Save all match coordinates in a dictionary
+        */
     void SaveMatchCoordinates(int x, int y, bool isHorizontal){
         matchCoordinates.Add(new Dictionary<string, int>() { { "x", x }, { "y", y } });
         if (isHorizontal){
@@ -133,8 +147,7 @@ public class Board: MonoBehaviour {
                     break;
                 }
             }
-        }
-        else{
+        }else{
             for (int i = 1; i < (GRID_HEIGHT - y); i++){
                 if (gridObj[x, y] == gridObj[x, y + i]){
                     matchCoordinates.Add(new Dictionary<string, int>() { { "x", x }, { "y", y + i } });
@@ -145,7 +158,10 @@ public class Board: MonoBehaviour {
         }
     }
 
-
+    /* Coroutine that applies the match by removing sequences and calling method to move gems downwards
+            *  If there are still matches after the rearrangement, the coroutine is called again
+            *  If no more matches, the functions call for possible moves
+            */
     IEnumerator TriggerMatch(){
         foreach (Dictionary<string, int> unit in matchCoordinates){
             gems[unit["x"], unit["y"]].GetComponent<SpriteRenderer>().sprite = null;
@@ -153,13 +169,13 @@ public class Board: MonoBehaviour {
         manager.AddScore(matchCoordinates.Count, comboCount);
         matchCoordinates.Clear();
         yield return new WaitForSeconds(WAIT_TIME_MOVE);
+        audioManager.Play("Clear");
         MoveGemsDownwards();
         yield return new WaitForSeconds(WAIT_TIME_MOVE);
-        combo = CheckMatches(true); //Check if there was more than one match in a single move
+        combo = CheckMatches(true);
         if(combo){
             comboCount += 1;
-            Debug.Log("combo");
-            StartCoroutine(TriggerMatch());
+            StartCoroutine(TriggerMatch()); //Recalls the method due to combo
         }else{
             CheckIfThereArePossibleMoves();
             manager.SetIsSwitching(false);
@@ -168,6 +184,10 @@ public class Board: MonoBehaviour {
         }
     }
 
+
+    /* Method that fills empty tiles from top to bottom
+            * New gems are random 
+            */
     void MoveGemsDownwards(){
         bool hasNull = true;
         while(hasNull){
@@ -192,7 +212,10 @@ public class Board: MonoBehaviour {
         }
     }
 
-
+    /* Check for all possible moves in the grid
+             * 
+             * Applies a try & catch to ignore IndexOutOfRangeException error            
+             */
     bool CheckIfThereArePossibleMoves(){
         bool ifPossibleMove = false;
         for (int x = 0; x < GRID_WIDTH; x++){
@@ -200,28 +223,24 @@ public class Board: MonoBehaviour {
                 try{
                     ifPossibleMove =  CheckIfSwitchIsPossible(x, y, x, y + 1, false); //UP
                     if(ifPossibleMove){
-                        Debug.Log("x:" + x + " y: " + y);
                         break;
                     }
                 }catch{ }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x, y - 1, false); //DOWN
                     if (ifPossibleMove){
-                        Debug.Log("x:" + x + " y: " + y);
                         break;
                     }
                 }catch { }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x + 1, y, false); //RIGHT
                     if (ifPossibleMove){
-                        Debug.Log("x:" + x + " y: " + y);
                         break;
                     }
                 }catch { }
                 try{
                     ifPossibleMove = CheckIfSwitchIsPossible(x, y, x - 1, y, false); //LEFT
                     if (ifPossibleMove){
-                        Debug.Log("x:" + x + " y: " + y);
                         break;
                     }
                 }catch { }
@@ -231,119 +250,15 @@ public class Board: MonoBehaviour {
             }
         }
         if (!ifPossibleMove){
-            Debug.Log("No Possible Move");
             reset = true;
             Setup(true);
+            StartCoroutine(ui.DisplayFade(manager.uiElements[4], 0, 3.0f));
         }
         return ifPossibleMove;
     }
 
-
-
-
-
-    bool CheckIfThereArePossibleMovesOLD(){
-        bool ifPossibleMove = false;
-        for (int x = 0; x < GRID_WIDTH; x++){
-            for (int y = 0; y < GRID_HEIGHT; y++){
-                if(y == 0 && x == 0)
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x + 1, y, false) || //RIGHT
-                        CheckIfSwitchIsPossible(x, y, x, y + 1, false)){  //UP
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (y == (GRID_HEIGHT - 1) && x == (GRID_WIDTH - 1))
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x, y - 1, false) || //DOWN
-                        CheckIfSwitchIsPossible(x, y, x - 1, y, false)){  //LEFT
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (y == 0 && x == (GRID_WIDTH - 1))
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x, y + 1, false) || //UP
-                        CheckIfSwitchIsPossible(x, y, x - 1, y, false)){  //LEFT
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (y == (GRID_HEIGHT - 1) && x == 0)
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x, y - 1, false) || //DOWN
-                        CheckIfSwitchIsPossible(x, y, x + 1, y, false)){  //RIGHT
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if(y == 0)
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x, y + 1, false) || //UP
-                        CheckIfSwitchIsPossible(x, y, x + 1, y, false) || //RIGHT
-                        CheckIfSwitchIsPossible(x, y, x - 1, y, false)){  //LEFT
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (x == 0)
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x, y + 1, false) || //UP
-                        CheckIfSwitchIsPossible(x, y, x + 1, y, false) || //RIGHT
-                        CheckIfSwitchIsPossible(x, y, x, y - 1, false)){  //DOWN
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (y == (GRID_HEIGHT - 1))
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x - 1, y, false) || //LEFT
-                        CheckIfSwitchIsPossible(x, y, x + 1, y, false) || //RIGHT
-                        CheckIfSwitchIsPossible(x, y, x, y - 1, false)){  //DOWN
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else if (x == (GRID_WIDTH - 1))
-                {
-                    if (CheckIfSwitchIsPossible(x, y, x - 1, y, false) || //LEFT
-                        CheckIfSwitchIsPossible(x, y, x, y + 1, false) || //UP
-                        CheckIfSwitchIsPossible(x, y, x, y - 1, false)){  //DOWN
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-                else{
-                    if (CheckIfSwitchIsPossible(x, y, x, y + 1, false) || //UP
-                        CheckIfSwitchIsPossible(x, y, x + 1, y, false) || //RIGHT
-                        CheckIfSwitchIsPossible(x, y, x - 1, y, false) || //LEFT
-                        CheckIfSwitchIsPossible(x, y, x, y - 1, false)){  //DOWN
-                        Debug.Log("x:" + x + " y: " + y);
-                        ifPossibleMove = true;
-                        break;
-                    }
-                }
-            }
-            if(ifPossibleMove){
-                break;
-            }
-        }
-        if(!ifPossibleMove){
-            Debug.Log("No Possible Move");
-        }
-        return ifPossibleMove;
-    }
-
-
+    /* Deactivate the board object after the time is over
+            */
     public void DeactivateBoard(){
         gameObject.SetActive(false);
     }

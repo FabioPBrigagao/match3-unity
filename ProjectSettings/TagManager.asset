@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Board
   - UI
+  - Audio Manager
   layers:
   - Default
   - TransparentFX
