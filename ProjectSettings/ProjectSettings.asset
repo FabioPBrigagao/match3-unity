@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: PlayKids Hiring Process
+  companyName: default
   productName: match3-test
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}

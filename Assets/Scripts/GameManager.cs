@@ -104,10 +104,10 @@ public class GameManager : MonoBehaviour {
     public void AddScore(int sequenceCount, int combo = 1){
         score += (sequenceCount * combo);
         totalScore += (sequenceCount * combo);
-        StartCoroutine(ui.DisplayFade(uiElements[1], (sequenceCount * combo), 2.0f));
+        StartCoroutine(ui.DisplayFade(uiElements[1], (sequenceCount * combo), 1.0f));
         if(score >= scoreRoundGoal){
             StartCoroutine(ui.DisplayFade(uiElements[0],0, 3.0f));
-            scoreRoundGoal *= 2;
+            scoreRoundGoal += 35;
             round += 1;
             score = 0;
             timer = 120;
