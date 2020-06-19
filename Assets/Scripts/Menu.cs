@@ -5,23 +5,19 @@ using UnityEngine;
 
 public class Menu : MonoBehaviour{
 
-    public GameObject[] uiElements;
+    public GameObject[] menuUI;
+    public GameObject[] instructionsUI;
 
-    /* Buttons Method: Start
-                    */
-    public void StartGame(){
+    public void ButtonStartGame(){
         SceneManager.LoadScene(1);
     }
-    /* Buttons Method: Instuctions
-                        */
-    public void Instuctions(){
-        uiElements[0].SetActive(false);
-        uiElements[1].SetActive(true);
+
+    public void ButtonInstuctions(){
+        foreach (var item in menuUI) item.SetActive(false);
+        foreach (var item in instructionsUI) item.SetActive(true);
     }
 
-    /* Buttons Method: Menu
-                        */
-    public void ReturnMenu(){
+    public void ButtonReturnMenu(){
         SceneManager.LoadScene(0);
     }
 

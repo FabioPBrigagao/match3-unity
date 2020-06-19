@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Gem : MonoBehaviour{
+public class Gem : MonoBehaviour {
 
     Board board;
     GameManager manager;
@@ -16,14 +16,13 @@ public class Gem : MonoBehaviour{
         manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
     }
 
-    /* Instantiate the gem object
-                */
+    /* 
+    *   Instantiate the gem object
+    */
     public static GameObject Start(GameObject gem, Vector2 position, int x, int y, float TILE_SIZE, Transform parent){
         return Instantiate(gem, new Vector2(position.x + (x * TILE_SIZE), position.y + (y * TILE_SIZE)), Quaternion.identity, parent);
     }
 
-    /* When left move is clicked
-            */
     void OnMouseDown(){
         //First gem selected
         if (!selected && !manager.isSelected){
@@ -43,17 +42,13 @@ public class Gem : MonoBehaviour{
         }
     }
 
-    /* Reset the selected gem due to swap
-            */
     public void ResetSelection(){
         gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
         selected = false;
     }
 
-    /* Retrieve coordinates from the board when instantiated
-                */
-    public void SetCoordinates(Dictionary<string,int> arg){
-        coordinate = arg;
+    public void SetCoordinates(Dictionary<string,int> dic){
+        coordinate = dic;
     }
 
 }

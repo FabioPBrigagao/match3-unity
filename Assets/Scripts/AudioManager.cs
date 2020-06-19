@@ -7,7 +7,6 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour{
 
     public Sound[] sounds;
-
     public static AudioManager instance;
 
     void Awake(){
@@ -29,12 +28,11 @@ public class AudioManager : MonoBehaviour{
         }
     }
 
-    void Start(){
-        Play("Background Music");
-    }
+    void Start() => Play("Background Music");
 
-    /* Find audio and play it from sounds array
-                    */
+    /* 
+    *   Find audio and play it from sounds array
+    */
     public void Play (string name){
         Sound audio = Array.Find(sounds, Sound => Sound.name == name);
         audio.source.Play();
@@ -43,9 +41,10 @@ public class AudioManager : MonoBehaviour{
 
 
 
-/* Sound variable type class
-                * Used to setup AudioManager
-                */
+/* 
+*   Sound variable type class
+*   Used to setup AudioManager
+*/
 [System.Serializable]
 public class Sound{
 

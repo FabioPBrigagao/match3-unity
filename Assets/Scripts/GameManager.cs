@@ -8,35 +8,48 @@ public class GameManager : MonoBehaviour {
     Board board;
     UI ui;
     AudioManager audioManager;
-
-    public GameObject[] uiElements;
-
-    [HideInInspector] public int score = 0;
-    [HideInInspector] public int totalScore;
-    [HideInInspector] public int round = 1;
-    [HideInInspector] public int scoreRoundGoal = 10;
-    [HideInInspector] public float timer = 120f;
-    [HideInInspector] public bool isSelected = false;
-
+    public GameObject[] gameplayUIElements, gameOverUIElements;
+    public GameObject additionUI, shuffleUI, nextRoundUI;
+    [HideInInspector] public int score, totalScore, round, scoreRoundGoal;
+    [HideInInspector] public float timer;
+    [HideInInspector] public bool isSelected;
     private int selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2;
     private bool isSwitching = false;
+    private const int ROUND_GOAL_INCREASE = 35;
+    private const int RESET_TIMER = 120;
+    private const int ROUND_ONE_GOAL = 10;
 
-    void Awake(){
+    void Awake() => Setup();
+    void Update() => Timer();
+
+    void Setup(){
+        //Initial conditions
+        round = 1;
+        timer = RESET_TIMER;
+        scoreRoundGoal = ROUND_ONE_GOAL;
+        isSelected = false;
+
+        //Reference objects
         board = GameObject.FindGameObjectWithTag("Board").GetComponent<Board>();
         ui = GameObject.FindGameObjectWithTag("UI").GetComponent<UI>();
         audioManager = GameObject.FindGameObjectWithTag("Audio Manager").GetComponent<AudioManager>();
     }
 
-    void Update(){     
-        if(timer <= 0){ 
-            Invoke("GameOver",0);
+    /*
+    *  Handles timer
+    *  When timer reaches 0, the game is over
+    */
+    void Timer(){
+        if (timer <= 0){
+            Invoke("GameOver", 0);
         }else{
             timer -= Time.deltaTime;
         }
     }
 
-    /* Called by a gem object to apply a move if possible
-                */
+    /*
+    *  Called by a gem object to apply a move if possible
+    */
     public void CheckIfPossibleMove(){
         if (PerpendicularMove() && !isSwitching){ 
             if(board.CheckIfSwitchIsPossible(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2,true)){
@@ -49,37 +62,49 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    /* Check if selected gems are a legal movement. 
-                * A swap can only happen up, down, right and left 
-                * No diagonal swap
-                */
+    /*
+    *  Check if selected gems are a legal movement. 
+    *  A swap can only happen up, down, right and left 
+    *  No diagonal swap
+    */
     bool PerpendicularMove(){
-        if ((selectedXCor_1 + 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Right
-                   (selectedXCor_1 - 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) || //Left
-                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 + 1 == selectedYCor_2) || //Up
-                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)){ //Down
+        if ((selectedXCor_1 + 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) ||           //Right
+                   (selectedXCor_1 - 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) ||    //Left
+                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 + 1 == selectedYCor_2) ||    //Up
+                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)){     //Down
             return true;
         }else{
             return false;
         }
     }
 
-    /* Gem object updates game manager if it has been selected or deselected
-                */
+    /*
+    *  Calculate score
+    *  Call UI effects 
+    *  Manages round transition
+    */
+    public void AddScore(int sequenceCount, int combo = 1){
+        score += (sequenceCount * combo);
+        totalScore += (sequenceCount * combo);
+        ui.AdditionPopUp(additionUI, 1.0f, (sequenceCount * combo));
+        if (score >= scoreRoundGoal){
+            StartCoroutine(ui.PopUpFadeAway(nextRoundUI, 3.0f));
+            scoreRoundGoal += ROUND_GOAL_INCREASE;
+            round += 1;
+            score = 0;
+            timer = RESET_TIMER;
+        }
+    }
+
     public void SetIsSelected(bool status){
         audioManager.Play("Select");
         isSelected = status;
     }
 
-    /* Keeps track if a switch is happening. 
-                * No movements are allowed during a swap
-                */
     public void SetIsSwitching(bool status){
         isSwitching = status;
     }
 
-    /* Sets first and second selected coordinates
-                */
     public void SetSelectedCoordinates(bool firstSelection, int x, int y){
         if(firstSelection){
             selectedXCor_1 = x;
@@ -97,42 +122,19 @@ public class GameManager : MonoBehaviour {
         selectedYCor_2 = 0;
     }
 
-    /* Calculate score
-                * call UI effects 
-                * manages rounds
-                 */
-    public void AddScore(int sequenceCount, int combo = 1){
-        score += (sequenceCount * combo);
-        totalScore += (sequenceCount * combo);
-        StartCoroutine(ui.DisplayFade(uiElements[1], (sequenceCount * combo), 1.0f));
-        if(score >= scoreRoundGoal){
-            StartCoroutine(ui.DisplayFade(uiElements[0],0, 3.0f));
-            scoreRoundGoal += 35;
-            round += 1;
-            score = 0;
-            timer = 120;
-        }
-    }
-    /* Set game over screen
-                     */
     void GameOver(){
         board.DeactivateBoard();
         ui.DisplayGameOverText();
-        uiElements[3].SetActive(false);
-        uiElements[2].SetActive(true);
+        foreach (var item in gameplayUIElements) item.SetActive(false);
+        foreach (var item in gameOverUIElements) item.SetActive(true);
     }
 
-    /* Buttons Method: Restart
-                        */
-    public void RestartGame(){
+    public void ButtonRestartGame(){
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    /* Buttons Method: Menu
-                        */
-    public void ReturnMenu(){
+    public void ButtonReturnMenu(){
         SceneManager.LoadScene(0);
     }
-
 }
 

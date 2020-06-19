@@ -7,14 +7,15 @@ public class UI : MonoBehaviour{
 
     GameManager manager;
     public Slider slider;
-
     public Text[] roundText, scoreText, timerText, totalScoreText, finalRoundText;
 
-    void Awake(){
-        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
-    }
+    void Awake() => manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+    void Update() => VariableText();
 
-    void Update(){
+    /* 
+    *   Dynamic UI text change during the gameplay
+    */
+    void VariableText(){
         scoreText[0].text = manager.score + " /" + manager.scoreRoundGoal;
         scoreText[1].text = manager.score + " /" + manager.scoreRoundGoal;
 
@@ -23,16 +24,12 @@ public class UI : MonoBehaviour{
 
         timerText[0].text = Mathf.Round(manager.timer) + "";
         slider.value = manager.timer;
-
     }
 
-    /* Coroutine coordinates pop-ups during gameplay
-                    * Apply fade 
-                    */
-    public IEnumerator DisplayFade(GameObject obj, int scoreAdd, float time){
-        if (scoreAdd > 0){
-            obj.GetComponent<Text>().text = "+" + scoreAdd + "pts.";
-        }
+    /* 
+    *   Activates popup and decrease alpha gradually to 0 
+    */
+    public IEnumerator PopUpFadeAway(GameObject obj, float time){
         obj.SetActive(true);
         Color originalcolor = obj.GetComponent<Text>().color;
         for (float t = 1.0f; t >= 0.0f; t -= Time.deltaTime / time){
@@ -41,6 +38,13 @@ public class UI : MonoBehaviour{
             yield return null;
         }
         obj.SetActive(false);
+    }
+    
+    public void AdditionPopUp(GameObject obj, float time, int scoreAdd){
+        if (scoreAdd > 0){
+            obj.GetComponent<Text>().text = "+" + scoreAdd + "pts.";
+        }
+        StartCoroutine(PopUpFadeAway(obj, time));
     }
 
 
