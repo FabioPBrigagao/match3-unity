@@ -2,7 +2,9 @@
 
 This repository is a Unity project folder that contains a finished match3 game.
 
-![](https://github.com/FabioPBrigagao/match3-unity/blob/master/match3_Screenshot.PNG)
+<p align="center">
+  <img src="https://github.com/FabioPBrigagao/match3-unity/blob/master/match3_Screenshot.PNG">
+</p>
 
 ## Unity Version
 
