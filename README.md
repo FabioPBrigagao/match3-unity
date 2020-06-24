@@ -1,6 +1,6 @@
 # match3-test
 
-This repository is a Unity project folder that contains a finished match3 game.
+Match3-Test is a classic tile-matching game where the player must create sequences of 3 or more gems of the same kind.
 
 <p align="center">
   <img src="https://github.com/FabioPBrigagao/match3-unity/blob/master/match3_Screenshot.PNG">
@@ -8,7 +8,7 @@ This repository is a Unity project folder that contains a finished match3 game.
 
 ## Unity Version
 
-The project was developed using Unity 2018.4.23f1
+This repository is a Unity project folder. The project was developed using Unity 2018.4.23f1
 
 ## Getting Started
 
