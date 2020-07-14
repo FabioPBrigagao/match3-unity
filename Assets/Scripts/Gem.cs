@@ -4,17 +4,10 @@ using UnityEngine;
 
 public class Gem : MonoBehaviour {
 
-    Board board;
-    GameManager manager;
     AudioManager audioManager;
 
     public bool selected = false;
     private Dictionary<string, int> coordinate;
-
-    void Awake(){
-        board = GameObject.FindGameObjectWithTag("Board").GetComponent<Board>();
-        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
-    }
 
     /* 
     *   Instantiate the gem object
@@ -25,20 +18,20 @@ public class Gem : MonoBehaviour {
 
     void OnMouseDown(){
         //First gem selected
-        if (!selected && !manager.isSelected){
+        if (!selected && !GameManager.instance.isSelected){
             selected = true;
             gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0.5f);
-            manager.SetIsSelected(selected);
-            manager.SetSelectedCoordinates(true, coordinate["x"], coordinate["y"]);
+            GameManager.instance.SetIsSelected(selected);
+            GameManager.instance.SetSelectedCoordinates(true, coordinate["x"], coordinate["y"]);
         //Second gem selected & make move if possible
-        }else if (!selected && manager.isSelected){
-            manager.SetSelectedCoordinates(false, coordinate["x"], coordinate["y"]);
-            manager.CheckIfPossibleMove();
+        }else if (!selected && GameManager.instance.isSelected){
+            GameManager.instance.SetSelectedCoordinates(false, coordinate["x"], coordinate["y"]);
+            GameManager.instance.CheckIfPossibleMove();
         //Deselect a selected gem
         }else if (selected){
             gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 1);
             selected = false;
-            manager.SetIsSelected(selected);
+            GameManager.instance.SetIsSelected(selected);
         }
     }
 

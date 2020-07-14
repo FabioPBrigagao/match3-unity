@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
-    Board board;
-    UI ui;
-    AudioManager audioManager;
+    public static GameManager instance;
+
+    public Board board;
     public GameObject[] gameplayUIElements, gameOverUIElements;
     public GameObject additionUI, shuffleUI, nextRoundUI;
     [HideInInspector] public int score, totalScore, round, scoreRoundGoal;
@@ -15,34 +15,36 @@ public class GameManager : MonoBehaviour {
     [HideInInspector] public bool isSelected;
     private int selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2;
     private bool isSwitching = false;
+    private bool gameover = false;
     private const int ROUND_GOAL_INCREASE = 35;
     private const int RESET_TIMER = 120;
     private const int ROUND_ONE_GOAL = 10;
 
-    void Awake() => Setup();
+    void Awake() {
+        instance = this;
+        Setup();
+    }
+
     void Update() => Timer();
 
-    void Setup(){
-        //Initial conditions
+    /* 
+     *   Initial Conditions
+     */
+    void Setup() {
         round = 1;
         timer = RESET_TIMER;
         scoreRoundGoal = ROUND_ONE_GOAL;
         isSelected = false;
-
-        //Reference objects
-        board = GameObject.FindGameObjectWithTag("Board").GetComponent<Board>();
-        ui = GameObject.FindGameObjectWithTag("UI").GetComponent<UI>();
-        audioManager = GameObject.FindGameObjectWithTag("Audio Manager").GetComponent<AudioManager>();
     }
 
     /*
     *  Handles timer
     *  When timer reaches 0, the game is over
     */
-    void Timer(){
-        if (timer <= 0){
-            Invoke("GameOver", 0);
-        }else{
+    void Timer() {
+        if (timer <= 0 && !gameover) {
+            GameOver();
+        } else {
             timer -= Time.deltaTime;
         }
     }
@@ -50,10 +52,10 @@ public class GameManager : MonoBehaviour {
     /*
     *  Called by a gem object to apply a move if possible
     */
-    public void CheckIfPossibleMove(){
-        if (PerpendicularMove() && !isSwitching){ 
-            if(board.CheckIfSwitchIsPossible(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2,true)){
-                audioManager.Play("Swap");
+    public void CheckIfPossibleMove() {
+        if (PerpendicularMove() && !isSwitching) {
+            if (board.CheckIfSwitchIsPossible(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2, true)) {
+                AudioManager.instance.Play("Swap");
                 board.MakeSpriteSwitch(selectedXCor_1, selectedYCor_1, selectedXCor_2, selectedYCor_2);
                 isSwitching = true;
                 ResetCoordinates();
@@ -67,13 +69,13 @@ public class GameManager : MonoBehaviour {
     *  A swap can only happen up, down, right and left 
     *  No diagonal swap
     */
-    bool PerpendicularMove(){
+    bool PerpendicularMove() {
         if ((selectedXCor_1 + 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) ||           //Right
                    (selectedXCor_1 - 1 == selectedXCor_2 && selectedYCor_1 == selectedYCor_2) ||    //Left
                    (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 + 1 == selectedYCor_2) ||    //Up
-                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)){     //Down
+                   (selectedXCor_1 == selectedXCor_2 && selectedYCor_1 - 1 == selectedYCor_2)) {     //Down
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -83,12 +85,12 @@ public class GameManager : MonoBehaviour {
     *  Call UI effects 
     *  Manages round transition
     */
-    public void AddScore(int sequenceCount, int combo = 1){
+    public void AddScore(int sequenceCount, int combo = 1) {
         score += (sequenceCount * combo);
         totalScore += (sequenceCount * combo);
-        ui.AdditionPopUp(additionUI, 1.0f, (sequenceCount * combo));
-        if (score >= scoreRoundGoal){
-            StartCoroutine(ui.PopUpFadeAway(nextRoundUI, 3.0f));
+        UI.instance.AdditionPopUp(additionUI, 1.0f, (sequenceCount * combo));
+        if (score >= scoreRoundGoal) {
+            StartCoroutine(UI.instance.PopUpFadeAway(nextRoundUI, 3.0f));
             scoreRoundGoal += ROUND_GOAL_INCREASE;
             round += 1;
             score = 0;
@@ -96,44 +98,45 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void SetIsSelected(bool status){
-        audioManager.Play("Select");
+    public void SetIsSelected(bool status) {
+        AudioManager.instance.Play("Select");
         isSelected = status;
     }
 
-    public void SetIsSwitching(bool status){
+    public void SetIsSwitching(bool status) {
         isSwitching = status;
     }
 
-    public void SetSelectedCoordinates(bool firstSelection, int x, int y){
-        if(firstSelection){
+    public void SetSelectedCoordinates(bool firstSelection, int x, int y) {
+        if (firstSelection) {
             selectedXCor_1 = x;
             selectedYCor_1 = y;
-        }else{
+        } else {
             selectedXCor_2 = x;
             selectedYCor_2 = y;
         }
     }
 
-    void ResetCoordinates(){
+    void ResetCoordinates() {
         selectedXCor_1 = 0;
         selectedYCor_1 = 0;
         selectedXCor_2 = 0;
         selectedYCor_2 = 0;
     }
 
-    void GameOver(){
+    void GameOver() {
+        gameover = true;
         board.DeactivateBoard();
-        ui.DisplayGameOverText();
+        UI.instance.DisplayGameOverText();
         foreach (var item in gameplayUIElements) item.SetActive(false);
         foreach (var item in gameOverUIElements) item.SetActive(true);
     }
 
-    public void ButtonRestartGame(){
+    public void ButtonRestartGame() {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void ButtonReturnMenu(){
+    public void ButtonReturnMenu() {
         SceneManager.LoadScene(0);
     }
 }

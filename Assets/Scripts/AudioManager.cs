@@ -11,8 +11,8 @@ public class AudioManager : MonoBehaviour{
 
     void Awake(){
 
-        //Used to handle Audio Manager carry over between scenes
-        if(instance == null){
+        //Keep AudioManager between menu and gameplay scene
+        if (instance == null){
             instance = this;
         }else{
             Destroy(gameObject);

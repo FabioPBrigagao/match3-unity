@@ -2188,6 +2188,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccef5760b33024b49bf8107577dcbef3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  board: {fileID: 750770652}
   gameplayUIElements:
   - {fileID: 1462169442}
   - {fileID: 39324144}
